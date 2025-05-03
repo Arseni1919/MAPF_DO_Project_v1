@@ -1,8 +1,6 @@
-# CGA-MAPF Algorithm (version 2)
+# MAPF-DO
 
-## MAPF
 
-## Lifelong MAPF
 
 ## Credits
 
