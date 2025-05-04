@@ -388,10 +388,20 @@ def create_agents(
 ) -> Tuple[List[AgentAlg], Dict[str, AgentAlg]]:
     agents: List[AgentAlg] = []
     agents_dict: Dict[str, AgentAlg] = {}
-    for num, (s_node, g_node) in enumerate(zip(start_nodes, goal_nodes)):
+    goals_len = len(goal_nodes)
+    start_nodes_with_goals = start_nodes[0:goals_len]
+    num = 0
+    for s_node, g_node in zip(start_nodes_with_goals, goal_nodes):
         new_agent = AgentAlg(num, s_node, g_node)
         agents.append(new_agent)
         agents_dict[new_agent.name] = new_agent
+        num += 1
+    start_nodes_without_goals = start_nodes[goals_len:]
+    for s_node in start_nodes_without_goals:
+        new_agent = AgentAlg(num, s_node)
+        agents.append(new_agent)
+        agents_dict[new_agent.name] = new_agent
+        num += 1
     return agents, agents_dict
 
 

@@ -26,7 +26,7 @@ def run_mapf_alg(alg, params, final_render: bool = True):
     # n_agents = 700
     # n_agents = 600
     # n_agents = 550
-    # n_agents = 500
+    n_agents = 500
     # n_agents = 450
     # n_agents = 400
     # n_agents = 350
@@ -37,12 +37,14 @@ def run_mapf_alg(alg, params, final_render: bool = True):
     # n_agents = 150
     # n_agents = 100
     # n_agents = 80
-    n_agents = 70
+    # n_agents = 70
     # n_agents = 50
     # n_agents = 40
     # n_agents = 15
     # n_agents = 10
     # n_agents = 3
+
+    n_goal_nodes = 10
 
     path_to_maps: str = '../maps'
     path_to_heuristics: str = '../logs_for_heuristics'
@@ -56,7 +58,8 @@ def run_mapf_alg(alg, params, final_render: bool = True):
     # sv_map: np.ndarray = get_sv_map(img_dir, folder_dir=path_to_sv_maps)
 
     start_nodes: List[Node] = random.sample(nodes, n_agents)
-    goal_nodes: List[Node] = random.sample(nodes, n_agents)
+    # goal_nodes: List[Node] = random.sample(nodes, n_agents)
+    goal_nodes: List[Node] = random.sample(nodes, n_goal_nodes)
     # start_nodes: List[Node] = [nodes_dict['4_8'], nodes_dict['4_4'], nodes_dict['8_8']]
     # goal_nodes: List[Node] = [nodes_dict['4_2'], nodes_dict['4_4'], nodes_dict['8_8']]
     # start_nodes: List[Node] = [nodes_dict['4_8'], nodes_dict['4_4']]

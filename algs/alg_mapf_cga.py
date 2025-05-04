@@ -91,7 +91,7 @@ def run_cga_mapf(
                 agent.path.append(next_node)
             agent.prev_node = agent.curr_node
             agent.curr_node = next_node
-            if agent.curr_node != agent.goal_node:
+            if agent.curr_node != agent.get_goal_node():
                 finished = False
                 agent.priority += 1
             else:

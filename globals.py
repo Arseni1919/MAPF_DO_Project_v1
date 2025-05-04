@@ -185,7 +185,7 @@ class Node:
 
 
 class AgentAlg:
-    def __init__(self, num: int, start_node: Node, goal_node: Node):
+    def __init__(self, num: int, start_node: Node, goal_node: Node | None = None):
         self.num = num
         self.name = f'agent_{num}'
         self.start_node: Node = start_node
@@ -193,12 +193,13 @@ class AgentAlg:
         self.curr_node: Node = start_node
         # self.curr_node_name: str = self.curr_node.xy_name
         self.goal_node: Node | None = goal_node
-        self.goal_node_name: str = self.goal_node.xy_name
+        if self.goal_node is not None:
+            self.goal_node_name: str = self.goal_node.xy_name
         self.alt_goal_node: Node | None = None
         self.message: str = ''
         self.path: List[Node] | None = [self.start_node]
         self.k_path: List[Node] | None = [self.start_node]
-        self.init_priority: float = random.random()
+        self.init_priority: float = random.random() if self.goal_node is not None else 0
         self.priority: float = self.init_priority
 
     @property
