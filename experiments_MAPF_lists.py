@@ -5,8 +5,8 @@ from algs.alg_mapf_LNS2 import run_lns2, run_k_lns2
 from algs.alg_mapf_pibt import run_pibt
 from algs.alg_mapf_lacam import run_lacam
 from algs.alg_mapf_lacam_star import run_lacam_star
-from algs.alg_mapf_cga import run_cga_mapf
-from algs.alg_mapf_cga_pure import run_cga_pure
+from algs.alg_mapf_macga_pibt import run_cga_mapf
+from algs.alg_mapf_macga import run_cga_pure
 
 # ------------------------------------------------------------------------------------------------------------ #
 # General
