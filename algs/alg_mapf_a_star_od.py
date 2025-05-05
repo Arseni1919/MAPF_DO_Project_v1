@@ -29,6 +29,8 @@ def run_a_star_od(
     # algorithm
     # TODO
 
+    # plot
+
     # return None, {}
     return {a.name: a.path for a in agents}, {'agents': agents, 'time': None, 'makespan': None}
 
