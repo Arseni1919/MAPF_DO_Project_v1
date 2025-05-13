@@ -4,6 +4,7 @@ from functions_plotting import *
 from algs.alg_mapf_pibt import run_procedure_pibt
 
 
+
 # -------------------------------------------------------------------------------------------------------------------- #
 # -------------------------------------------------------------------------------------------------------------------- #
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -117,7 +118,8 @@ def get_config_name(config: Dict[str, Node]):
     name = ''
     for k in k_list:
         v = config[k]
-        name += v.xy_name + '-'
+        if v is not None:
+            name += v.xy_name + '-'
     return name[:-1]
 
 
@@ -173,29 +175,4 @@ def get_new_config(
             if not success:
                 return None
     return config_to
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

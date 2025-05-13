@@ -1,3 +1,4 @@
+
 from algs.alg_functions_lacam import *
 from run_single_MAPF_func import run_mapf_alg
 
@@ -37,14 +38,15 @@ def run_lacam(
     N_init: HighLevelNode = HighLevelNode(
         config=config_start, tree=deque([get_C_init()]), order=init_order, parent=None
     )
+
     open_list.appendleft(N_init)
     explored_dict[N_init.name] = N_init
 
     iteration = 0
-    while len(open_list) > 0 and time_is_good(start_time, max_time):
+    while len(open_list) > 0 and time_is_good(start_time, max_time): # line 4 in pseudocode
         N: HighLevelNode = open_list[0]
 
-        if N.name == config_goal_name:
+        if N.name == config_goal_name: # goal test
 
             paths_dict = backtrack(N)
             for a_name, path in paths_dict.items():
@@ -68,7 +70,7 @@ def run_lacam(
             v = N.config[i_agent.name]
             neighbours = v.neighbours[:]
             random.shuffle(neighbours)
-            for nei_name in neighbours:
+            for nei_name in neighbours:  # line 11 in pseudocode
                 C_new = get_C_child(parent=C, who=i_agent, where=nodes_dict[nei_name])
                 N.tree.append(C_new)
 

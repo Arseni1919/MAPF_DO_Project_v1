@@ -4,18 +4,22 @@ from functions_plotting import *
 
 
 def run_mapf_alg(alg, params, final_render: bool = True):
-    # set_seed(random_seed_bool=False, seed=5)
-    # set_seed(random_seed_bool=False, seed=123)
-    # set_seed(random_seed_bool=False, seed=2953)
-    set_seed(random_seed_bool=True)
+    set_seed(random_seed_bool=False, seed=5)
+    set_seed(random_seed_bool=False, seed=123)
+    set_seed(random_seed_bool=False, seed=2953)
+    # set_seed(random_seed_bool=True)
 
     # img_dir = '10_10_my_rand.map'
     # img_dir = '15-15-two-rooms.map'
     # img_dir = '15-15-four-rooms.map'
     # img_dir = '15-15-six-rooms.map'
     # img_dir = '15-15-eight-rooms.map'
-    img_dir = '10_10_my_empty.map'
+    # img_dir = '10_10_my_empty.map'
+    # img_dir = 'loop_chain.map'
+    # img_dir = 'corners.map'
 
+    # img_dir = '5_5_empty.map'
+    # img_dir = '3_3_empty.map'
     # img_dir = '10_10_my_corridor.map'
     # img_dir = 'empty-32-32.map'
     # img_dir = 'random-32-32-10.map'
@@ -24,38 +28,25 @@ def run_mapf_alg(alg, params, final_render: bool = True):
     # img_dir = 'maze-32-32-2.map'
     # img_dir = 'room-32-32-4.map'
 
-    # n_agents = 700
-    # n_agents = 600
-    # n_agents = 550
-    # n_agents = 500
-    # n_agents = 450
-    # n_agents = 400
-    # n_agents = 350
-    # n_agents = 300
-    # n_agents = 250
-    # n_agents = 200
-    # n_agents = 170
-    # n_agents = 150
-    # n_agents = 100
-    # n_agents = 80
-    # n_agents = 70
-    # n_agents = 50
-    # n_agents = 40
-    # n_agents = 15
-    n_agents = 10
-    # n_agents = 3
-
-    n_goal_nodes = 10
+    img_dir = '5_5_empty.map'
+    n_agents = 20
+    n_goal_nodes = 3
 
     path_to_maps: str = '../maps'
     path_to_heuristics: str = '../logs_for_heuristics'
     path_to_sv_maps: str = '../logs_for_freedom_maps'
-
+    print("CWD:", os.getcwd())
     img_np, (height, width) = get_np_from_dot_map(img_dir, path_to_maps)
     map_dim = (height, width)
     nodes, nodes_dict = build_graph_from_np(img_np, show_map=False)
+
     h_dict: Dict[str, np.ndarray] = exctract_h_dict(img_dir, path_to_heuristics)
-    blocked_sv_map: np.ndarray = get_blocked_sv_map(img_dir, folder_dir=path_to_sv_maps)
+
+    try:
+        blocked_sv_map: np.ndarray = get_blocked_sv_map(img_dir, folder_dir=path_to_sv_maps)
+    except:
+        RuntimeWarning("blocked_sv_map is None")
+        blocked_sv_map = None
     # sv_map: np.ndarray = get_sv_map(img_dir, folder_dir=path_to_sv_maps)
 
     start_nodes: List[Node] = random.sample(nodes, n_agents)
@@ -78,6 +69,8 @@ def run_mapf_alg(alg, params, final_render: bool = True):
     paths_dict, info = alg(
         start_nodes, goal_nodes, nodes, nodes_dict, h_dict, map_dim, params
     )
+    print('\n')
+    print(paths_dict)
 
     # plot
     if final_render and paths_dict is not None:

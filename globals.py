@@ -14,8 +14,12 @@ from typing import *
 from collections import deque, defaultdict
 
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
+# import matplotlib
 import matplotlib
+matplotlib.use("TkAgg")  # Or try "QtAgg", "Agg", "WebAgg", etc.
+import matplotlib.pyplot as plt
+
 # matplotlib.use('TkAgg')
 
 # -------------------------------------------------------------------------------------------------------------------- #
