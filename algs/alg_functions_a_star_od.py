@@ -1,18 +1,37 @@
-from globals import *
-from functions_general import *
-from functions_plotting import *
-import copy
+from globals import AgentAlg, Node, Dict, List, Deque, deque, Tuple
+import numpy as np
+from typing import Optional
 
 
 class AgentOD(AgentAlg):
-    def __init__(self, num: int, start_node: Node, goal_node: Node | None = None):
+    def __init__(self, num: int, start_node: Node, goal_node: Optional[Node] = None):
         super().__init__(num, start_node, goal_node)
-
         self.pre_move_position: Node = start_node
         self.post_move_position: Node = start_node
         self.assigned_move: bool = False
         self.order: int = num
         self.heuristic: int = 0
+
+    def clone(self):
+        new_agent = AgentOD(
+            num=self.num,
+            start_node=self.start_node,
+            goal_node=self.goal_node
+        )
+        new_agent.pre_move_position = self.pre_move_position
+        new_agent.post_move_position = self.post_move_position
+        new_agent.assigned_move = self.assigned_move
+        new_agent.order = self.num
+        new_agent.heuristic = self.heuristic
+        new_agent.name = self.name
+        new_agent.start_node_name = self.start_node_name  # ?
+        new_agent.curr_node = self.curr_node
+        new_agent.curr_node_name = self.curr_node.xy_name  # ?
+        if self.goal_node is not None:
+            new_agent.goal_node_name = self.goal_node.xy_name
+        new_agent.path = self.path
+        new_agent.k_path = self.k_path
+        return new_agent
 
 
 class ConfigNode:
@@ -58,10 +77,18 @@ class ConfigNode:
         return name[:-1]
 
 
-def goal_test(config_node: ConfigNode) -> bool:
+def goal_testt(config_node: ConfigNode) -> bool:
     for agent in config_node.agents:
         if agent.goal_node:
             if agent.goal_node != agent.curr_node:
+                return False
+    return True
+
+
+def goal_test(config_node: ConfigNode) -> bool:
+    for agent in config_node.agents:
+        if agent.goal_node:
+            if config_node.config[agent.name] != agent.goal_node:
                 return False
     return True
 
@@ -96,8 +123,8 @@ def create_agents_od(
 
 
 def backtrack_od(n: ConfigNode) -> Dict[str, List[Node]]:
-    paths_deque_dict: Dict[str, Deque[Node]] = {k: deque([v]) for k, v in n.config.items()}
-    parent: ConfigNode = n.parent
+    paths_deque_dict: Dict[str, Deque[Node]] = {k: deque([]) for k, _ in n.config.items()}
+    parent: ConfigNode = n
     while parent is not None:
         for k, v in parent.config.items():
             if k == parent.chosen_agent:
@@ -120,7 +147,8 @@ def get_next_config(agent: AgentOD,
                     neighbour: Node,
                     h_dict: Dict[str, np.ndarray],
                     intermediate: bool,
-                    idx: int = 0) -> ConfigNode:
+                    idx: int = 0,
+                    cost_func: str = 'makespan') -> ConfigNode:
     chose_to_stay = False
     if agent.curr_node == neighbour:
         chose_to_stay = True
@@ -130,24 +158,17 @@ def get_next_config(agent: AgentOD,
         start_node=agent.start_node,
         goal_node=agent.goal_node
     )
-
     agent_copy.pre_move_position = agent.pre_move_position
     agent_copy.curr_node = neighbour
     agent_copy.post_move_position = neighbour
     agent_copy.assigned_move = True
     agent_copy.heuristic = agent.heuristic
 
-    # make a copy of the first agent (only him moves in standard nodes)
-    # agent_copy = copy.deepcopy(agent)
-    #
-    # # assign a move
-    # agent_copy.curr_node = neighbour
-    # agent_copy.post_move_position = neighbour
-    # agent_copy.assigned_move = True
+    config_copy = dict(curr_config.config)
+    config_copy[agent_copy.name] = agent_copy.curr_node
 
-    # create a new config
-    config_copy = copy.deepcopy(curr_config.config)
-    agents_copy = copy.deepcopy(curr_config.agents)
+    agents_copy = [agent.clone() for agent in curr_config.agents]
+
     new_config_node_copy = ConfigNode(config=config_copy,
                                       config_agents=agents_copy,
                                       g=0,
@@ -161,35 +182,20 @@ def get_next_config(agent: AgentOD,
     new_config_node_copy.chose_to_stay = chose_to_stay
 
     # calculate the new h,g,f values
-    new_config_node_copy.h = config_h(new_config_node_copy)
+    new_config_node_copy.h = config_h(new_config_node_copy, cost_func)
     new_config_node_copy.g = curr_config.g
     new_config_node_copy.f = new_config_node_copy.g + new_config_node_copy.h
 
     # standard nodes initiate a new step, therefore have plus 1 for g and f
-    if not intermediate:
-        new_config_node_copy.g += 1
-        new_config_node_copy.f += 1
+    if cost_func == 'makespan':
+        if not intermediate:
+            new_config_node_copy.g += 1
+            new_config_node_copy.f += 1
 
-    # new_config_node = copy.deepcopy(curr_config)
-    # new_config_node.chosen_agent = agent_copy.name  # which agent just moved?
-    # new_config_node.parent = curr_config  # who is the parent configNode?
-    # new_config_node.is_intermediate = True  # is the node intermediate or standard?
-    #
-    # # replace the old agent with the new one
-    # new_config_node.agents[idx] = agent_copy
-    # new_config_node.config[agent_copy.name] = neighbour
-    # new_config_node.update_name()
-    # new_config_node.chose_to_stay = chose_to_stay
-    #
-    # # calculate the new h,g,f values
-    # new_config_node.h = config_h(new_config_node)
-    # new_config_node.g = curr_config.g
-    # new_config_node.f = new_config_node.g + new_config_node.h
-    #
-    # # standard nodes initiate a new step, therefore have plus 1 for g and f
-    # if not intermediate:
-    #     new_config_node.g += 1
-    #     new_config_node.f += 1
+    elif cost_func == 'fuel':
+        if not new_config_node_copy.chose_to_stay:
+            new_config_node_copy.g += 1
+            new_config_node_copy.f += 1
 
     # when finished with the last intermediate node, reset for the next standard node
     if idx == len(curr_config.agents) - 1:
@@ -218,12 +224,37 @@ def neighbour_taken(idx: int,
             return True
 
 
-
-def config_h(config: ConfigNode) -> int:
+def config_h(config: ConfigNode, cost_func: str) -> int:
     h = 0
     for i, agent in enumerate(config.agents):
         if agent.heuristic is not None:
-           h += agent.heuristic
-#             if agent.heuristic > h:
-#                 h = agent.heuristic
+            if cost_func == 'fuel':
+                h += agent.heuristic
+            elif cost_func == 'makespan':
+                if agent.heuristic > h:
+                    h = agent.heuristic
     return h
+
+
+def get_config_name(config: Dict[str, Node]):
+    # same from lacam to save imports
+    assert len(config) > 0
+    k_list = list(config.keys())
+    k_list.sort()
+    name = ''
+    for k in k_list:
+        v = config[k]
+        if v is not None:
+            name += v.xy_name + '-'
+    return name[:-1]
+
+
+def get_fuel(agents: List[AgentOD]) -> int:
+    fuel = 0
+    for agent in agents:
+        curr_step = agent.path[0]
+        for step in agent.path:
+            if step != curr_step:
+                fuel += 1
+                curr_step = step
+    return fuel

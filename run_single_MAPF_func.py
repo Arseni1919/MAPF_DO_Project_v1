@@ -3,35 +3,17 @@ from functions_general import *
 from functions_plotting import *
 
 
-def run_mapf_alg(alg, params, final_render: bool = True):
-    set_seed(random_seed_bool=False, seed=5)
-    set_seed(random_seed_bool=False, seed=123)
-    set_seed(random_seed_bool=False, seed=2953)
-    # set_seed(random_seed_bool=True)
-
-    # img_dir = '10_10_my_rand.map'
-    # img_dir = '15-15-two-rooms.map'
-    # img_dir = '15-15-four-rooms.map'
-    # img_dir = '15-15-six-rooms.map'
-    # img_dir = '15-15-eight-rooms.map'
-    # img_dir = '10_10_my_empty.map'
-    # img_dir = 'loop_chain.map'
-    # img_dir = 'corners.map'
-
-    # img_dir = '5_5_empty.map'
-    # img_dir = '3_3_empty.map'
-    # img_dir = '10_10_my_corridor.map'
-    # img_dir = 'empty-32-32.map'
-    # img_dir = 'random-32-32-10.map'
-    # img_dir = 'random-32-32-20.map'
-    # img_dir = 'maze-32-32-4.map'
-    # img_dir = 'maze-32-32-2.map'
-    # img_dir = 'room-32-32-4.map'
-
-    img_dir = '5_5_empty.map'
-    n_agents = 20
-    n_goal_nodes = 3
-
+def run_mapf_alg(alg, params, final_render: bool = True, random_seed: bool = False):
+    if random_seed:
+        set_seed(random_seed_bool=True)
+    else:
+        set_seed(random_seed_bool=False, seed=5)
+        # set_seed(random_seed_bool=False, seed=123)
+        # set_seed(random_seed_bool=False, seed=2953)
+    img_dir = params['img_dir']
+    n_agents = params['num_agents']
+    n_goal_nodes = params['num_goals']
+    cost_func = params['cost_func']
     path_to_maps: str = '../maps'
     path_to_heuristics: str = '../logs_for_heuristics'
     path_to_sv_maps: str = '../logs_for_freedom_maps'
@@ -71,7 +53,7 @@ def run_mapf_alg(alg, params, final_render: bool = True):
     )
     print('\n')
     print(paths_dict)
-
+    validate_no_collisions_by_timestamp(paths_dict)
     # plot
     if final_render and paths_dict is not None:
         agents: List = info['agents']
@@ -102,6 +84,21 @@ def run_mapf_alg(alg, params, final_render: bool = True):
         plt.show()
 
 
+def validate_no_collisions_by_timestamp(paths: dict[str, list[str]]) -> bool:
+    max_len = max(len(path) for path in paths.values())
+
+    for t in range(max_len):
+        positions_at_t = set()
+        for agent, path in paths.items():
+            # Clamp to the last position if agent's path is shorter
+            pos = path[t] if t < len(path) else path[-1]
+            if pos in positions_at_t:
+                print(f"FAIL! -> Collision at time {t} on node '{pos}'")
+                return False
+            positions_at_t.add(pos)
+
+    print("No collisions detected.")
+    return True
 
 
 
