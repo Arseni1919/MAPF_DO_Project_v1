@@ -49,6 +49,7 @@ class ConfigNode:
         self.is_intermediate: bool = False
         self.chosen_agent: str | None = None
         self.chose_to_stay: bool = False
+        self.moved_yet: List = []
 
     def __lt__(self, other):              # required for heapq
         return self.f < other.f
@@ -75,14 +76,6 @@ class ConfigNode:
             v = config[k]
             name += v.xy_name + '-'
         return name[:-1]
-
-
-def goal_testt(config_node: ConfigNode) -> bool:
-    for agent in config_node.agents:
-        if agent.goal_node:
-            if agent.goal_node != agent.curr_node:
-                return False
-    return True
 
 
 def goal_test(config_node: ConfigNode) -> bool:
@@ -148,7 +141,9 @@ def get_next_config(agent: AgentOD,
                     h_dict: Dict[str, np.ndarray],
                     intermediate: bool,
                     idx: int = 0,
-                    cost_func: str = 'makespan') -> ConfigNode:
+                    cost_func: str = 'makespan',
+                    weights=None) -> ConfigNode:
+
     chose_to_stay = False
     if agent.curr_node == neighbour:
         chose_to_stay = True
@@ -163,6 +158,7 @@ def get_next_config(agent: AgentOD,
     agent_copy.post_move_position = neighbour
     agent_copy.assigned_move = True
     agent_copy.heuristic = agent.heuristic
+
 
     config_copy = dict(curr_config.config)
     config_copy[agent_copy.name] = agent_copy.curr_node
@@ -180,9 +176,14 @@ def get_next_config(agent: AgentOD,
     new_config_node_copy.config[agent_copy.name] = neighbour
     new_config_node_copy.update_name()
     new_config_node_copy.chose_to_stay = chose_to_stay
+    new_config_node_copy.moved_yet = [agent_name for agent_name in curr_config.moved_yet]
+
+    if not chose_to_stay:
+        if agent_copy.name not in new_config_node_copy.moved_yet:
+            new_config_node_copy.moved_yet.append(agent_copy.name)
 
     # calculate the new h,g,f values
-    new_config_node_copy.h = config_h(new_config_node_copy, cost_func)
+    new_config_node_copy.h = config_h(new_config_node_copy, cost_func, weights)
     new_config_node_copy.g = curr_config.g
     new_config_node_copy.f = new_config_node_copy.g + new_config_node_copy.h
 
@@ -196,6 +197,25 @@ def get_next_config(agent: AgentOD,
         if not new_config_node_copy.chose_to_stay:
             new_config_node_copy.g += 1
             new_config_node_copy.f += 1
+
+    elif cost_func == 'moved_agents':
+        new_config_node_copy.g = get_moved_agents(new_config_node_copy)
+        new_config_node_copy.f = new_config_node_copy.g + new_config_node_copy.h
+
+    elif cost_func == 'average':
+        g_moved_agents = get_moved_agents(new_config_node_copy) * weights['moved_agents'] / sum(weights.values())
+
+        if not new_config_node_copy.chose_to_stay:
+            g_fuel = 1 * weights['fuel'] / sum(weights.values())
+        else:
+            g_fuel = 0
+        if not intermediate:
+            g_makespan = 1 * weights['makespan'] / sum(weights.values())
+        else:
+            g_makespan = 0
+
+        new_config_node_copy.g += (g_moved_agents + g_fuel + g_makespan)
+        new_config_node_copy.f = new_config_node_copy.g + new_config_node_copy.h
 
     # when finished with the last intermediate node, reset for the next standard node
     if idx == len(curr_config.agents) - 1:
@@ -224,16 +244,34 @@ def neighbour_taken(idx: int,
             return True
 
 
-def config_h(config: ConfigNode, cost_func: str) -> int:
-    h = 0
+def config_h(config: ConfigNode, cost_func: str, weights: dict) -> int:
+    h_makespan = 0
+    h_fuel = 0
+    h_moved_agents = 0
     for i, agent in enumerate(config.agents):
         if agent.heuristic is not None:
-            if cost_func == 'fuel':
-                h += agent.heuristic
-            elif cost_func == 'makespan':
-                if agent.heuristic > h:
-                    h = agent.heuristic
-    return h
+
+            h_fuel += agent.heuristic
+
+            if agent.heuristic > h_makespan:
+                h_makespan = agent.heuristic
+
+            if agent.goal_node:
+                if agent.curr_node != agent.goal_node:
+                    h_moved_agents += 1
+
+    if cost_func == 'moved_agents':
+        h_moved_agents - len(config.moved_yet) # TODO Try to fix this heuristic
+        return h_moved_agents
+    elif cost_func == 'makespan':
+        return h_makespan
+    elif cost_func == 'fuel':
+        return h_fuel
+    elif cost_func == 'average':
+        w_moved_agents = weights['moved_agents'] * h_moved_agents
+        w_fuel = weights['fuel'] * h_fuel
+        w_makespan = weights['makespan'] * h_makespan
+        return (w_moved_agents + w_fuel + w_makespan) / sum(weights.values())
 
 
 def get_config_name(config: Dict[str, Node]):
@@ -258,3 +296,7 @@ def get_fuel(agents: List[AgentOD]) -> int:
                 fuel += 1
                 curr_step = step
     return fuel
+
+
+def get_moved_agents(config: ConfigNode) -> int:
+    return len(config.moved_yet)

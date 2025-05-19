@@ -219,7 +219,7 @@ def build_heuristic_for_one_target(target_node, nodes, map_dim, to_save=True, pl
 def main():
     # img_dir = 'den520d.png'
     path_to_maps: str = 'maps'
-    img_dir = '4_4_empty.map'
+    img_dir = '4_4_random.map'
     map_dim = get_dims_from_pic(img_dir=img_dir, path=path_to_maps)
     # build_graph_from_np
     img_np, (height, width) = get_np_from_dot_map(img_dir, path_to_maps)
@@ -241,7 +241,7 @@ def main():
 
 
     # Save to logs_for_heuristics with a descriptive name
-    json_save_path = Path(__file__).resolve().parent.parent / 'MAPF_DO_PROJECT_v1'/ 'logs_for_heuristics' / 'h_dict_of_4_4_empty.json'
+    json_save_path = Path(__file__).resolve().parent.parent / 'MAPF_DO_PROJECT_v1'/ 'logs_for_heuristics' / 'h_dict_of_4_4_random.json'
     save_h_dict(h_dict, json_save_path)
 
     # plt.show()

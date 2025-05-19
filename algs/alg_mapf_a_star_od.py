@@ -22,6 +22,7 @@ def run_a_star_od(
     img_np: np.ndarray = params['img_np']
     cost_func: str = params['cost_func']
     blocked_sv_map: np.ndarray = params['blocked_sv_map']
+    weights = params['weights']
 
     if to_render:
         fig, ax = plt.subplots(1, 2, figsize=(14, 7))
@@ -51,11 +52,11 @@ def run_a_star_od(
     iteration = 0
     completed_steps = -1
     expansions = 0
+
     while len(open_list) > 0 and time_is_good(start_time, max_time):  # line 4 in pseudocode
 
         curr_config: ConfigNode = heapq.heappop(open_list)
         expansions += 1
-
         if curr_config.is_intermediate:  # intermediate nodes
             agents_counter = 0
             for idx, agent in enumerate(curr_config.agents):
@@ -71,7 +72,7 @@ def run_a_star_od(
                         if agent.goal_node:
                             agent_h = h_dict[agent.goal_node_name][n.x][n.y]
                         agent.heuristic = agent_h
-                        new_config_node = get_next_config(agent, curr_config, n, h_dict, True, idx, cost_func)
+                        new_config_node = get_next_config(agent, curr_config, n, h_dict, True, idx, cost_func, weights)
                         heapq.heappush(open_list, new_config_node)
 
                     break
@@ -90,13 +91,15 @@ def run_a_star_od(
                 runtime = time.time() - start_time
                 makespan: int = max([len(a.path) for a in agents])
                 fuel: int = get_fuel(agents)
+                moved_agents: int = len(curr_config.moved_yet)
                 print(
                     f" runtime: {runtime},"
                     f" expansions: {expansions},"
                     f" completed steps: {completed_steps},"
                     f" makespan: {makespan}",
-                    f" fuel: {fuel}",)
-                return paths_dict, {'agents': agents, 'time': runtime, 'makespan': makespan}
+                    f" fuel: {fuel}",
+                    f" moved agents: {moved_agents}",)
+                return paths_dict, {'agents': agents, 'time': runtime, 'makespan': makespan, 'moved agents': moved_agents}
 
             completed_steps += 1
 
@@ -109,7 +112,7 @@ def run_a_star_od(
             for n in neighbours:
                 agent_h = h_dict[curr_config.agents[0].goal_node_name][n.x][n.y]
                 agent_0.heuristic = agent_h
-                new_config_node = get_next_config(agent_0, curr_config, n, h_dict, False, 0, cost_func)
+                new_config_node = get_next_config(agent_0, curr_config, n, h_dict, False, 0, cost_func, weights)
 
                 heapq.heappush(open_list, new_config_node)
             closed_list.add(curr_config.name)
@@ -139,10 +142,14 @@ def run_a_star_od(
 def main():
     to_render = True
     max_time = 3600
-    num_agents = 5
-    cost_func = 'fuel'
-    for num_goals in range(1, 4):
-        img_dir = "4_4_empty.map"
+    num_agents = 8
+    # cost_func = 'makespan'
+    # cost_func = 'fuel'
+    # cost_func = 'moved_agents'
+    cost_func = 'average'
+    weights = {'moved_agents': 0, 'fuel': 1, 'makespan': 0}
+    for num_goals in range(1, 6):
+        img_dir = "4_4_random.map"
         params = {
             'max_time': max_time,
             'alg_name': 'A*-OD',
@@ -152,9 +159,26 @@ def main():
             'num_goals': num_goals,
             'img_dir': img_dir,
             'cost_func': cost_func,
+            'weights': weights
         }
 
         run_mapf_alg(alg=run_a_star_od, params=params, final_render=True)
+
+
+
+
+import platform
+
+def beep():
+    if platform.system() == "Windows":
+        # Windows beep
+        import winsound
+        winsound.Beep(1000, 500)  # frequency (Hz), duration (ms)
+    else:
+        # Unix beep (requires `beep` command installed or fallback)
+        print('\a')  # Try terminal bell
+        # os.system('beep')  # Uncomment if you have the `beep` utility installed
+
 
 
 if __name__ == '__main__':
