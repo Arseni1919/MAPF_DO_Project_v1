@@ -8,16 +8,16 @@ import random
 import pstats
 import cProfile
 import itertools
-from itertools import combinations, permutations, tee, pairwise
+from itertools import combinations, permutations, tee  # , pairwise
 from datetime import datetime
 from typing import *
 from collections import deque, defaultdict
 
+
 import numpy as np
 # import matplotlib.pyplot as plt
-# import matplotlib
 import matplotlib
-matplotlib.use("TkAgg")  # Or try "QtAgg", "Agg", "WebAgg", etc.
+matplotlib.use("Agg")  # Or try "QtAgg", "Agg", "WebAgg", etc.
 import matplotlib.pyplot as plt
 
 # matplotlib.use('TkAgg')
